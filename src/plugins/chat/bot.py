@@ -19,7 +19,7 @@ from .message import (
 from .message_sender import message_manager  # 导入新的消息管理器
 from .relationship_manager import relationship_manager
 from .storage import MessageStorage
-from .utils import calculate_typing_time, is_mentioned_bot_in_txt
+from .utils import calculate_typing_time, is_mentioned_bot_in_segments
 from .willing_manager import willing_manager  # 导入意愿管理器
 
 
@@ -86,8 +86,8 @@ class ChatBot:
         # logger.info(f"\033[1;32m[主题识别]\033[0m 使用{global_config.topic_extract}主题: {topic}")
         
         await self.storage.store_message(message, topic[0] if topic else None)
-
-        is_mentioned = is_mentioned_bot_in_txt(message.processed_plain_text)
+        
+        is_mentioned = is_mentioned_bot_in_segments(message.message_segments)
         reply_probability = willing_manager.change_reply_willing_received(
             event.group_id, 
             topic[0] if topic else None,
