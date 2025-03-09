@@ -78,14 +78,14 @@ class WillingManager:
             + 0.5
         )
         current_willing *= rate_limit_factor
-        print(f"限制系数: {rate_limit_factor}, 当前意愿: {current_willing}")
+        print(f"限制系数: {rate_limit_factor:.4f}, 当前意愿: {current_willing:.4f}")
 
         reply_probability = max((current_willing - 0.45) * 2, 0)
         if group_id not in config.talk_allowed_groups:
             current_willing = 0
             reply_probability = 0
 
-        if group_id in config.talk_frequency_down_groups:
+        if not is_mentioned_bot and group_id in config.talk_frequency_down_groups:
             reply_probability = reply_probability / global_config.down_frequency_rate
 
         reply_probability = min(reply_probability, 1)
