@@ -57,11 +57,18 @@ def db_message_to_str(message_dict: Dict) -> str:
 
 def is_mentioned_bot_in_message(message: Message) -> bool:
     """检查消息是否提到了机器人"""
-    keywords = [global_config.BOT_NICKNAME]
-    for keyword in keywords:
-        if keyword in message.processed_plain_text:
+    if message.reply_message is not None:
+        match_result = (
+            message.reply_message.sender.user_id == global_config.BOT_QQ
+            and not all(
+                segment.type == "at"
+                and segment.params["qq"] == str(global_config.BOT_QQ)
+                for segment in message.message_segments
+            )
+        )
+        if match_result:
             return True
-    return False
+    return is_mentioned_bot_in_segments(message.message_segments)
 
 
 def is_mentioned_bot_in_txt(message: str) -> bool:
