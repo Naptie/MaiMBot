@@ -67,39 +67,41 @@ import random
 import math
 import time
 
+
 def load_or_create_char_frequency():
     """
     加载或创建汉字频率字典
     """
     cache_file = Path("char_frequency.json")
-    
+
     # 如果缓存文件存在，直接加载
     if cache_file.exists():
-        with open(cache_file, 'r', encoding='utf-8') as f:
+        with open(cache_file, "r", encoding="utf-8") as f:
             return json.load(f)
-    
+
     # 使用内置的词频文件
     char_freq = defaultdict(int)
-    dict_path = os.path.join(os.path.dirname(jieba.__file__), 'dict.txt')
-    
+    dict_path = os.path.join(os.path.dirname(jieba.__file__), "dict.txt")
+
     # 读取jieba的词典文件
-    with open(dict_path, 'r', encoding='utf-8') as f:
+    with open(dict_path, "r", encoding="utf-8") as f:
         for line in f:
             word, freq = line.strip().split()[:2]
             # 对词中的每个字进行频率累加
             for char in word:
                 if is_chinese_char(char):
                     char_freq[char] += int(freq)
-    
+
     # 归一化频率值
     max_freq = max(char_freq.values())
-    normalized_freq = {char: freq/max_freq * 1000 for char, freq in char_freq.items()}
-    
+    normalized_freq = {char: freq / max_freq * 1000 for char, freq in char_freq.items()}
+
     # 保存到缓存文件
-    with open(cache_file, 'w', encoding='utf-8') as f:
+    with open(cache_file, "w", encoding="utf-8") as f:
         json.dump(normalized_freq, f, ensure_ascii=False, indent=2)
-    
+
     return normalized_freq
+
 
 # 创建拼音到汉字的映射字典
 def create_pinyin_dict():
@@ -107,9 +109,9 @@ def create_pinyin_dict():
     创建拼音到汉字的映射字典
     """
     # 常用汉字范围
-    chars = [chr(i) for i in range(0x4e00, 0x9fff)]
+    chars = [chr(i) for i in range(0x4E00, 0x9FFF)]
     pinyin_dict = defaultdict(list)
-    
+
     # 为每个汉字建立拼音映射
     for char in chars:
         try:
@@ -117,17 +119,19 @@ def create_pinyin_dict():
             pinyin_dict[py].append(char)
         except Exception:
             continue
-    
+
     return pinyin_dict
+
 
 def is_chinese_char(char):
     """
     判断是否为汉字
     """
     try:
-        return '\u4e00' <= char <= '\u9fff'
+        return "\u4e00" <= char <= "\u9fff"
     except:
         return False
+
 
 def get_pinyin(sentence):
     """
@@ -137,7 +141,7 @@ def get_pinyin(sentence):
     """
     # 将句子拆分成单个字符
     characters = list(sentence)
-    
+
     # 获取每个字符的拼音
     result = []
     for char in characters:
@@ -147,8 +151,9 @@ def get_pinyin(sentence):
         # 获取拼音（数字声调）
         py = pinyin(char, style=Style.TONE3)[0][0]
         result.append((char, py))
-    
+
     return result
+
 
 def get_homophone(char, py, pinyin_dict, char_frequency, min_freq=5):
     """
@@ -158,17 +163,18 @@ def get_homophone(char, py, pinyin_dict, char_frequency, min_freq=5):
     # 移除原字并过滤低频字
     if char in homophones:
         homophones.remove(char)
-    
+
     # 过滤掉低频字
     homophones = [h for h in homophones if char_frequency.get(h, 0) >= min_freq]
-    
+
     # 按照字频排序
-    sorted_homophones = sorted(homophones, 
-                             key=lambda x: char_frequency.get(x, 0), 
-                             reverse=True)
-    
+    sorted_homophones = sorted(
+        homophones, key=lambda x: char_frequency.get(x, 0), reverse=True
+    )
+
     # 只返回前10个同音字，避免输出过多
     return sorted_homophones[:10]
+
 
 def get_similar_tone_pinyin(py):
     """
@@ -181,24 +187,25 @@ def get_similar_tone_pinyin(py):
     # 检查拼音是否为空或无效
     if not py or len(py) < 1:
         return py
-        
+
     # 如果最后一个字符不是数字，说明可能是轻声或其他特殊情况
     if not py[-1].isdigit():
         # 为非数字结尾的拼音添加数字声调1
-        return py + '1'
-    
+        return py + "1"
+
     base = py[:-1]  # 去掉声调
     tone = int(py[-1])  # 获取声调
-    
+
     # 处理轻声（通常用5表示）或无效声调
     if tone not in [1, 2, 3, 4]:
         return base + str(random.choice([1, 2, 3, 4]))
-    
+
     # 正常处理声调
     possible_tones = [1, 2, 3, 4]
     possible_tones.remove(tone)  # 移除原声调
     new_tone = random.choice(possible_tones)  # 随机选择一个新声调
     return base + str(new_tone)
+
 
 def calculate_replacement_probability(orig_freq, target_freq, max_freq_diff=200):
     """
@@ -211,58 +218,70 @@ def calculate_replacement_probability(orig_freq, target_freq, max_freq_diff=200)
     """
     if target_freq > orig_freq:
         return 1.0  # 如果替换字频率更高，保持原有概率
-    
+
     freq_diff = orig_freq - target_freq
     if freq_diff > max_freq_diff:
         return 0.0  # 频率差太大，不替换
-    
+
     # 使用指数衰减函数计算概率
     # 频率差为0时概率为1，频率差为max_freq_diff时概率接近0
     return math.exp(-3 * freq_diff / max_freq_diff)
 
-def get_similar_frequency_chars(char, py, pinyin_dict, char_frequency, num_candidates=5, min_freq=5, tone_error_rate=0.2):
+
+def get_similar_frequency_chars(
+    char,
+    py,
+    pinyin_dict,
+    char_frequency,
+    num_candidates=5,
+    min_freq=5,
+    tone_error_rate=0.2,
+):
     """
     获取与给定字频率相近的同音字，可能包含声调错误
     """
     homophones = []
-    
+
     # 有20%的概率使用错误声调
     if random.random() < tone_error_rate:
         wrong_tone_py = get_similar_tone_pinyin(py)
         homophones.extend(pinyin_dict[wrong_tone_py])
-    
+
     # 添加正确声调的同音字
     homophones.extend(pinyin_dict[py])
-    
+
     if not homophones:
         return None
-        
+
     # 获取原字的频率
     orig_freq = char_frequency.get(char, 0)
-    
+
     # 计算所有同音字与原字的频率差，并过滤掉低频字
-    freq_diff = [(h, char_frequency.get(h, 0)) 
-                for h in homophones 
-                if h != char and char_frequency.get(h, 0) >= min_freq]
-    
+    freq_diff = [
+        (h, char_frequency.get(h, 0))
+        for h in homophones
+        if h != char and char_frequency.get(h, 0) >= min_freq
+    ]
+
     if not freq_diff:
         return None
-    
+
     # 计算每个候选字的替换概率
     candidates_with_prob = []
     for h, freq in freq_diff:
         prob = calculate_replacement_probability(orig_freq, freq)
         if prob > 0:  # 只保留有效概率的候选字
             candidates_with_prob.append((h, prob))
-    
+
     if not candidates_with_prob:
         return None
-    
+
     # 根据概率排序
     candidates_with_prob.sort(key=lambda x: x[1], reverse=True)
-    
+
     # 返回概率最高的几个字
     return [char for char, _ in candidates_with_prob[:num_candidates]]
+
 
 def get_word_pinyin(word):
     """
@@ -270,11 +289,13 @@ def get_word_pinyin(word):
     """
     return [py[0] for py in pinyin(word, style=Style.TONE3)]
 
+
 def segment_sentence(sentence):
     """
     使用jieba分词，返回词语列表
     """
     return list(jieba.cut(sentence))
+
 
 def get_word_homophones(word, pinyin_dict, char_frequency, min_freq=5):
     """
@@ -287,14 +308,14 @@ def get_word_homophones(word, pinyin_dict, char_frequency, min_freq=5):
     """
     if len(word) == 1:
         return []
-        
+
     # 获取词的拼音
     word_pinyin = get_word_pinyin(word)
-    word_pinyin_str = ''.join(word_pinyin)
-    
+    word_pinyin_str = "".join(word_pinyin)
+
     # 创建词语频率字典
     word_freq = defaultdict(float)
-    
+
     # 遍历所有可能的同音字组合
     candidates = []
     for py in word_pinyin:
@@ -302,98 +323,130 @@ def get_word_homophones(word, pinyin_dict, char_frequency, min_freq=5):
         if not chars:
             return []
         candidates.append(chars)
-    
+
     # 生成所有可能的组合
     import itertools
+
     all_combinations = itertools.product(*candidates)
-    
+
     # 获取jieba词典和词频信息
-    dict_path = os.path.join(os.path.dirname(jieba.__file__), 'dict.txt')
+    dict_path = os.path.join(os.path.dirname(jieba.__file__), "dict.txt")
     valid_words = {}  # 改用字典存储词语及其频率
-    with open(dict_path, 'r', encoding='utf-8') as f:
+    with open(dict_path, "r", encoding="utf-8") as f:
         for line in f:
             parts = line.strip().split()
             if len(parts) >= 2:
                 word_text = parts[0]
                 word_freq = float(parts[1])  # 获取词频
                 valid_words[word_text] = word_freq
-    
+
     # 获取原词的词频作为参考
     original_word_freq = valid_words.get(word, 0)
     min_word_freq = original_word_freq * 0.1  # 设置最小词频为原词频的10%
-    
+
     # 过滤和计算频率
     homophones = []
     for combo in all_combinations:
-        new_word = ''.join(combo)
+        new_word = "".join(combo)
         if new_word != word and new_word in valid_words:
             new_word_freq = valid_words[new_word]
             # 只保留词频达到阈值的词
             if new_word_freq >= min_word_freq:
                 # 计算词的平均字频（考虑字频和词频）
-                char_avg_freq = sum(char_frequency.get(c, 0) for c in new_word) / len(new_word)
+                char_avg_freq = sum(char_frequency.get(c, 0) for c in new_word) / len(
+                    new_word
+                )
                 # 综合评分：结合词频和字频
-                combined_score = (new_word_freq * 0.7 + char_avg_freq * 0.3)
+                combined_score = new_word_freq * 0.7 + char_avg_freq * 0.3
                 if combined_score >= min_freq:
                     homophones.append((new_word, combined_score))
-    
+
     # 按综合分数排序并限制返回数量
     sorted_homophones = sorted(homophones, key=lambda x: x[1], reverse=True)
     return [word for word, _ in sorted_homophones[:5]]  # 限制返回前5个结果
 
-def create_typo_sentence(sentence, pinyin_dict, char_frequency, error_rate=0.5, min_freq=5, tone_error_rate=0.2, word_replace_rate=0.3):
+
+def create_typo_sentence(
+    sentence,
+    pinyin_dict,
+    char_frequency,
+    error_rate=0.5,
+    min_freq=5,
+    tone_error_rate=0.2,
+    word_replace_rate=0.3,
+):
     """
     创建包含同音字错误的句子，支持词语级别和字级别的替换
     只使用高频的有意义词语进行替换
     """
     result = []
     typo_info = []
-    
+
     # 分词
     words = segment_sentence(sentence)
-    
+
     for word in words:
         # 如果是标点符号或空格，直接添加
         if all(not is_chinese_char(c) for c in word):
             result.append(word)
             continue
-            
+
         # 获取词语的拼音
         word_pinyin = get_word_pinyin(word)
-        
+
         # 尝试整词替换
         if len(word) > 1 and random.random() < word_replace_rate:
-            word_homophones = get_word_homophones(word, pinyin_dict, char_frequency, min_freq)
+            word_homophones = get_word_homophones(
+                word, pinyin_dict, char_frequency, min_freq
+            )
             if word_homophones:
                 typo_word = random.choice(word_homophones)
                 # 计算词的平均频率
                 orig_freq = sum(char_frequency.get(c, 0) for c in word) / len(word)
-                typo_freq = sum(char_frequency.get(c, 0) for c in typo_word) / len(typo_word)
-                
+                typo_freq = sum(char_frequency.get(c, 0) for c in typo_word) / len(
+                    typo_word
+                )
+
                 # 添加到结果中
                 result.append(typo_word)
-                typo_info.append((word, typo_word, 
-                                ' '.join(word_pinyin), 
-                                ' '.join(get_word_pinyin(typo_word)), 
-                                orig_freq, typo_freq))
+                typo_info.append(
+                    (
+                        word,
+                        typo_word,
+                        " ".join(word_pinyin),
+                        " ".join(get_word_pinyin(typo_word)),
+                        orig_freq,
+                        typo_freq,
+                    )
+                )
                 continue
-        
+
         # 如果不进行整词替换，则进行单字替换
         if len(word) == 1:
             char = word
             py = word_pinyin[0]
             if random.random() < error_rate:
-                similar_chars = get_similar_frequency_chars(char, py, pinyin_dict, char_frequency, 
-                                                         min_freq=min_freq, tone_error_rate=tone_error_rate)
+                similar_chars = get_similar_frequency_chars(
+                    char,
+                    py,
+                    pinyin_dict,
+                    char_frequency,
+                    min_freq=min_freq,
+                    tone_error_rate=tone_error_rate,
+                )
                 if similar_chars:
                     typo_char = random.choice(similar_chars)
                     typo_freq = char_frequency.get(typo_char, 0)
                     orig_freq = char_frequency.get(char, 0)
-                    replace_prob = calculate_replacement_probability(orig_freq, typo_freq)
+                    replace_prob = calculate_replacement_probability(
+                        orig_freq, typo_freq
+                    )
                     if random.random() < replace_prob:
                         result.append(typo_char)
                         typo_py = pinyin(typo_char, style=Style.TONE3)[0][0]
-                        typo_info.append((char, typo_char, py, typo_py, orig_freq, typo_freq))
+                        typo_info.append(
+                            (char, typo_char, py, typo_py, orig_freq, typo_freq)
+                        )
                         continue
             result.append(char)
         else:
@@ -402,24 +455,35 @@ def create_typo_sentence(sentence, pinyin_dict, char_frequency, error_rate=0.5, 
             for i, (char, py) in enumerate(zip(word, word_pinyin)):
                 # 词中的字替换概率降低
                 word_error_rate = error_rate * (0.7 ** (len(word) - 1))
-                
+
                 if random.random() < word_error_rate:
-                    similar_chars = get_similar_frequency_chars(char, py, pinyin_dict, char_frequency, 
-                                                             min_freq=min_freq, tone_error_rate=tone_error_rate)
+                    similar_chars = get_similar_frequency_chars(
+                        char,
+                        py,
+                        pinyin_dict,
+                        char_frequency,
+                        min_freq=min_freq,
+                        tone_error_rate=tone_error_rate,
+                    )
                     if similar_chars:
                         typo_char = random.choice(similar_chars)
                         typo_freq = char_frequency.get(typo_char, 0)
                         orig_freq = char_frequency.get(char, 0)
-                        replace_prob = calculate_replacement_probability(orig_freq, typo_freq)
+                        replace_prob = calculate_replacement_probability(
+                            orig_freq, typo_freq
+                        )
                         if random.random() < replace_prob:
                             word_result.append(typo_char)
                             typo_py = pinyin(typo_char, style=Style.TONE3)[0][0]
-                            typo_info.append((char, typo_char, py, typo_py, orig_freq, typo_freq))
+                            typo_info.append(
+                                (char, typo_char, py, typo_py, orig_freq, typo_freq)
+                            )
                             continue
                 word_result.append(char)
-            result.append(''.join(word_result))
-    
-    return ''.join(result), typo_info
+            result.append("".join(word_result))
+
+    return "".join(result), typo_info
+
 
 def format_frequency(freq):
     """
@@ -427,48 +491,57 @@ def format_frequency(freq):
     """
     return f"{freq:.2f}"
 
+
 def main():
     # 记录开始时间
     start_time = time.time()
-    
+
     # 首先创建拼音字典和加载字频统计
     print("正在加载汉字数据库，请稍候...")
     pinyin_dict = create_pinyin_dict()
     char_frequency = load_or_create_char_frequency()
-    
+
     # 获取用户输入
     sentence = input("请输入中文句子：")
-    
+
     # 创建包含错别字的句子
-    typo_sentence, typo_info = create_typo_sentence(sentence, pinyin_dict, char_frequency, 
-                                                  error_rate=0.3, min_freq=5, 
-                                                  tone_error_rate=0.2, word_replace_rate=0.3)
-    
+    typo_sentence, typo_info = create_typo_sentence(
+        sentence,
+        pinyin_dict,
+        char_frequency,
+        error_rate=0.3,
+        min_freq=5,
+        tone_error_rate=0.2,
+        word_replace_rate=0.3,
+    )
+
     # 打印结果
     print("\n原句：", sentence)
     print("错字版：", typo_sentence)
-    
+
     if typo_info:
         print("\n错别字信息：")
         for orig, typo, orig_py, typo_py, orig_freq, typo_freq in typo_info:
             # 判断是否为词语替换
-            is_word = ' ' in orig_py
+            is_word = " " in orig_py
             if is_word:
                 error_type = "整词替换"
             else:
                 tone_error = orig_py[:-1] == typo_py[:-1] and orig_py[-1] != typo_py[-1]
                 error_type = "声调错误" if tone_error else "同音字替换"
-            
-            print(f"原文：{orig}({orig_py}) [频率：{format_frequency(orig_freq)}] -> "
-                  f"替换：{typo}({typo_py}) [频率：{format_frequency(typo_freq)}] [{error_type}]")
-    
+
+            print(
+                f"原文：{orig}({orig_py}) [频率：{format_frequency(orig_freq)}] -> "
+                f"替换：{typo}({typo_py}) [频率：{format_frequency(typo_freq)}] [{error_type}]"
+            )
+
     # 获取拼音结果
     result = get_pinyin(sentence)
-    
+
     # 打印完整拼音
     print("\n完整拼音：")
     print(" ".join(py for _, py in result))
-    
+
     # 打印词语分析
     print("\n词语分析：")
     words = segment_sentence(sentence)
@@ -478,11 +551,12 @@ def main():
             print(f"词语：{word}")
             print(f"拼音：{' '.join(word_pinyin)}")
             print("---")
-    
+
     # 计算并打印总耗时
     end_time = time.time()
     total_time = end_time - start_time
     print(f"\n总耗时：{total_time:.2f}秒")
+
 
 if __name__ == "__main__":
     main()
