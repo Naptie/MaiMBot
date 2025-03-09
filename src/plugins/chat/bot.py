@@ -82,7 +82,7 @@ class ChatBot:
         topic = ''
         interested_rate = 0
         interested_rate = await hippocampus.memory_activate_value(message.processed_plain_text)/100
-        print(f"\033[1;32m[记忆激活]\033[0m 对{message.processed_plain_text}的激活度:---------------------------------------{interested_rate}\n")
+        print(f"\033[1;32m[记忆激活]\033[0m 对“{message.processed_plain_text}”的激活度：{interested_rate}\n")
         # logger.info(f"\033[1;32m[主题识别]\033[0m 使用{global_config.topic_extract}主题: {topic}")
         
         await self.storage.store_message(message, topic[0] if topic else None)
