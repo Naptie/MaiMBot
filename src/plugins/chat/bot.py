@@ -98,7 +98,7 @@ class ChatBot:
         await self.storage.store_message(message, topic[0] if topic else None)
 
         is_mentioned = is_mentioned_bot_in_segments(message.message_segments)
-        reply_probability = willing_manager.change_reply_willing_received(
+        reply_probability, do_reply = willing_manager.change_reply_willing_received(
             event.group_id,
             topic[0] if topic else None,
             is_mentioned,
@@ -110,13 +110,12 @@ class ChatBot:
         current_willing = willing_manager.get_willing(event.group_id)
 
         print(
-            f"\033[1;32m[{current_time}][{message.group_name}]{message.user_nickname}:\033[0m {message.processed_plain_text}\033[1;36m[回复意愿:{current_willing:.2f}][概率:{reply_probability * 100:.1f}%]\033[0m"
+            f"\033[1;32m[{current_time}][{message.group_name}]{message.user_nickname}:\033[0m {message.processed_plain_text} \033[1;36m[回复意愿：{current_willing:.2f}][概率：{reply_probability * 100:.1f}%]\033[0m"
         )
 
         response = ""
 
-        if random() < reply_probability:
-
+        if do_reply:
             tinking_time_point = round(time.time(), 2)
             think_id = "mt" + str(tinking_time_point)
             thinking_message = Message_Thinking(message=message, message_id=think_id)

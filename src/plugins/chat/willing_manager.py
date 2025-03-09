@@ -1,6 +1,7 @@
 import asyncio
 from datetime import datetime
 import math
+from random import random
 from .config import global_config
 
 
@@ -38,7 +39,7 @@ class WillingManager:
         is_emoji: bool = False,
         interested_rate: float = 0,
     ) -> float:
-        """改变指定群组的回复意愿并返回回复概率"""
+        """改变指定群组的回复意愿并返回回复概率与是否回复"""
         current_willing = self.group_reply_willing.get(group_id, 0)
 
         # print(f"初始意愿: {current_willing}")
@@ -92,7 +93,11 @@ class WillingManager:
             reply_probability = 0
 
         self.group_reply_willing[group_id] = min(current_willing, 3.0)
-        return reply_probability
+
+        do_reply = random() < reply_probability
+        if do_reply:
+            self.update_last_reply_time(group_id)
+        return reply_probability, do_reply
 
     def change_reply_willing_sent(self, group_id: int):
         """开始思考后降低群组的回复意愿"""
