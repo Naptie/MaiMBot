@@ -191,7 +191,7 @@ class MessageManager:
                 # 直接发，等什么呢
                 if (
                     message_earliest.is_head
-                    and message_earliest.update_thinking_time() > 10
+                    and message_earliest.update_thinking_time() > 5
                 ):
                     await message_sender.send_group_message(
                         group_id,
@@ -224,7 +224,7 @@ class MessageManager:
 
                     try:
                         # 发送
-                        if msg.is_head and msg.update_thinking_time() > 10:
+                        if msg.is_head and msg.update_thinking_time() > 5:
                             await message_sender.send_group_message(
                                 group_id,
                                 msg.processed_plain_text,
