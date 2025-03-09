@@ -75,7 +75,7 @@ def is_mentioned_bot_in_txt(message: str) -> bool:
 def is_mentioned_bot_in_segments(segments: list) -> bool:
     """检查消息是否提到了机器人"""
     return len(segments) > 1 and any(
-        segment.type == "at" and segment.data["qq"] == global_config.BOT_QQ
+        segment.type == "at" and segment.params['qq'] == str(global_config.BOT_QQ)
         for segment in segments
     )
 
