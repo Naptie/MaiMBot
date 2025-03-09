@@ -57,9 +57,13 @@ class Message_Sender:
             await self._current_bot.send_group_msg(
                 group_id=group_id, message=message, auto_escape=auto_escape
             )
+            if len(message) > 20:
+                message = message[:20] + "..."
             print(f"\033[1;34m[调试]\033[0m 发送消息“{message}”成功")
         except Exception as e:
             print(f"发生错误 {e}")
+            if len(message) > 20:
+                message = message[:20] + "..."
             print(f"\033[1;34m[调试]\033[0m 发送消息“{message}”失败")
 
 
@@ -187,7 +191,7 @@ class MessageManager:
                 # 直接发，等什么呢
                 if (
                     message_earliest.is_head
-                    and message_earliest.update_thinking_time() > 30
+                    and message_earliest.update_thinking_time() > 10
                 ):
                     await message_sender.send_group_message(
                         group_id,
@@ -220,7 +224,7 @@ class MessageManager:
 
                     try:
                         # 发送
-                        if msg.is_head and msg.update_thinking_time() > 30:
+                        if msg.is_head and msg.update_thinking_time() > 10:
                             await message_sender.send_group_message(
                                 group_id,
                                 msg.processed_plain_text,
