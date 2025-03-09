@@ -186,7 +186,7 @@ class MessageManager:
                     container.remove_message(message_earliest)
             else:  # 如果不是message_thinking就只能是message_sending
                 print(
-                    f"\033[1;34m[调试]\033[0m 消息'{message_earliest.processed_plain_text}'正在发送中"
+                    f"\033[1;34m[调试]\033[0m 消息“{message_earliest.processed_plain_text[:20]}”正在发送中"
                 )
                 # 直接发，等什么呢
                 if (
