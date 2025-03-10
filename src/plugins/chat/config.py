@@ -327,31 +327,31 @@ class BotConfig:
         include_configs = {
             "personality": {
                 "func": personality,
-                "support": ">=0.0.0"
+                "support": ">=0.0.4"
             },
             "emoji": {
                 "func": emoji,
-                "support": ">=0.0.0"
+                "support": ">=0.0.4"
             },
             "cq_code": {
                 "func": cq_code,
-                "support": ">=0.0.0"
+                "support": ">=0.0.4"
             },
             "bot": {
                 "func": bot,
-                "support": ">=0.0.0"
+                "support": ">=0.0.4"
             },
             "response": {
                 "func": response,
-                "support": ">=0.0.0"
+                "support": ">=0.0.4"
             },
             "model": {
                 "func": model,
-                "support": ">=0.0.0"
+                "support": ">=0.0.4"
             },
             "message": {
                 "func": message,
-                "support": ">=0.0.0"
+                "support": ">=0.0.4"
             },
             "memory": {
                 "func": memory,
@@ -374,7 +374,7 @@ class BotConfig:
             },
             "groups": {
                 "func": groups,
-                "support": ">=0.0.0"
+                "support": ">=0.0.4"
             },
             "others": {
                 "func": others,

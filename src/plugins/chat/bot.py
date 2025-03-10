@@ -98,8 +98,8 @@ class ChatBot:
         interested_rate = (
             await hippocampus.memory_activate_value(message.processed_plain_text) / 100
         )
-        print(
-            f"\033[1;32m[记忆激活]\033[0m 对“{message.processed_plain_text}”的激活度：{interested_rate}\n"
+        logger.info(
+            f"[记忆激活]对“{message.processed_plain_text}”的激活度：{interested_rate}\n"
         )
         interested_rate = await hippocampus.memory_activate_value(message.processed_plain_text) / 100
         logger.debug(f"对{message.processed_plain_text}"

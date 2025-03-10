@@ -86,7 +86,7 @@ class WillingManager:
             + 0.5
         )
         current_willing *= rate_limit_factor
-        print(f"限制系数: {rate_limit_factor:.4f}, 当前意愿: {current_willing:.4f}")
+        logger.debug(f"限制系数: {rate_limit_factor:.4f}, 当前意愿: {current_willing:.4f}")
 
         # 回复概率迭代，保底0.01回复概率
         reply_probability = max(
