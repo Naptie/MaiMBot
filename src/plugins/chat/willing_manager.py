@@ -1,11 +1,15 @@
 import asyncio
 from loguru import logger
+from datetime import datetime
+import math
+from random import random
 from .config import global_config
 
 
 class WillingManager:
     def __init__(self):
         self.group_reply_willing = {}  # 存储每个群的回复意愿
+        self.group_last_reply_time = {}  # 存储每个群的最后回复时间
         self._decay_task = None
         self._started = False
         self.min_reply_willing = 0.01
@@ -71,6 +75,19 @@ class WillingManager:
         current_willing *= willing_amplifier
         logger.debug(f"放大系数_willing: {global_config.response_willing_amplifier}, 当前意愿: {current_willing}")
 
+        x = datetime.now().timestamp() - self.group_last_reply_time.get(group_id, 0)
+        rate_limit_factor = (
+            math.atan(
+                (x - 40) / 3
+                if group_id in config.talk_frequency_down_groups
+                else (x - 10) / 3
+            )
+            / math.pi
+            + 0.5
+        )
+        current_willing *= rate_limit_factor
+        logger.debug(f"限制系数: {rate_limit_factor:.4f}, 当前意愿: {current_willing:.4f}")
+
         # 回复概率迭代，保底0.01回复概率
         reply_probability = max(
             (current_willing - 0.45) * 2,
@@ -89,7 +106,11 @@ class WillingManager:
 
         self.group_reply_willing[group_id] = min(current_willing, 3.0)
         logger.debug(f"当前群组{group_id}回复概率：{reply_probability}")
-        return reply_probability
+
+        do_reply = random() < reply_probability
+        if do_reply:
+            self.update_last_reply_time(group_id)
+        return reply_probability, do_reply
 
     def change_reply_willing_sent(self, group_id: int):
         """开始思考后降低群组的回复意愿"""
@@ -101,6 +122,10 @@ class WillingManager:
         current_willing = self.group_reply_willing.get(group_id, 0)
         if current_willing < 1:
             self.group_reply_willing[group_id] = min(1, current_willing + 0.2)
+
+    def update_last_reply_time(self, group_id: int):
+        """更新群组的最后回复时间"""
+        self.group_last_reply_time[group_id] = datetime.now().timestamp()
 
     async def ensure_started(self):
         """确保衰减任务已启动"""

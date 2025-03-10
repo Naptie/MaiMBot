@@ -9,6 +9,7 @@ import random
 import time
 from collections import defaultdict
 from pathlib import Path
+from loguru import logger
 
 import jieba
 from pypinyin import Style, pinyin
@@ -38,7 +39,7 @@ class ChineseTypoGenerator:
         self.max_freq_diff = max_freq_diff
         
         # 加载数据
-        print("正在加载汉字数据库，请稍候...")
+        logger.debug("正在加载汉字数据库，请稍候...")
         self.pinyin_dict = self._create_pinyin_dict()
         self.char_frequency = self._load_or_create_char_frequency()
     

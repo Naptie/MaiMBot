@@ -328,15 +328,13 @@ class CQCode:
         Returns:
             表情包CQ码字符串
         """
-        # 确保使用绝对路径
-        abs_path = os.path.abspath(file_path)
-        # 转义特殊字符
-        escaped_path = abs_path.replace('&', '&amp;') \
-            .replace('[', '&#91;') \
-            .replace(']', '&#93;') \
-            .replace(',', '&#44;')
+        # 读取文件内容并进行Base64编码
+        with open(file_path, "rb") as file:
+            file_content = file.read()
+            base64_content = base64.b64encode(file_content).decode("utf-8")
+
         # 生成CQ码，设置sub_type=1表示这是表情包
-        return f"[CQ:image,file=file:///{escaped_path},sub_type=1]"
+        return f"[CQ:image,file=base64://{base64_content},sub_type=1]"
 
 
 class CQCode_tool:
