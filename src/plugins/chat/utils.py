@@ -78,7 +78,7 @@ def is_mentioned_bot_in_txt(message: str) -> bool:
 def is_mentioned_bot_in_segments(segments: list) -> bool:
     """检查消息是否提到了机器人"""
     return len(segments) > 1 and any(
-        segment.type == "at" and segment.params["qq"] == str(global_config.BOT_QQ)
+        segment.type == "at" and segment.params['qq'] == str(global_config.BOT_QQ)
         for segment in segments
     )
 
@@ -360,22 +360,20 @@ def process_llm_response(text: str) -> List[str]:
         error_rate=global_config.chinese_typo_error_rate,
         min_freq=global_config.chinese_typo_min_freq,
         tone_error_rate=global_config.chinese_typo_tone_error_rate,
-        word_replace_rate=global_config.chinese_typo_word_replace_rate,
+        word_replace_rate=global_config.chinese_typo_word_replace_rate
     )
     split_sentences = split_into_sentences_w_remove_punctuation(text)
     sentences = []
     for sentence in split_sentences:
         if global_config.chinese_typo_enable:
-            typoed_text, typo_corrections = typo_generator.create_typo_sentence(
-                sentence
-            )
+            typoed_text, typo_corrections = typo_generator.create_typo_sentence(sentence)
             sentences.append(typoed_text)
             if typo_corrections:
                 sentences.append(typo_corrections)
         else:
             sentences.append(sentence)
     # 检查分割后的消息数量是否过多（超过3条）
-
+    
     if len(sentences) > 5:
         print(f"分割后消息数量过多 ({len(sentences)} 条)，返回默认回复")
         return [f"{global_config.BOT_NICKNAME}不知道哦"]
@@ -391,7 +389,7 @@ def calculate_typing_time(
         input_string (str): 输入的字符串
         chinese_time (float): 中文字符的输入时间，默认为0.2秒
         english_time (float): 英文字符的输入时间，默认为0.1秒
-
+        
     特殊情况：
     - 如果只有一个中文字符，将使用3倍的中文输入时间
     - 在所有输入结束后，额外加上回车时间0.3秒
@@ -400,16 +398,16 @@ def calculate_typing_time(
     # 将0-1的唤醒度映射到-1到1
     mood_arousal = mood_manager.current_mood.arousal
     # 映射到0.5到2倍的速度系数
-    typing_speed_multiplier = 1.5**mood_arousal  # 唤醒度为1时速度翻倍,为-1时速度减半
-    chinese_time *= 1 / typing_speed_multiplier
-    english_time *= 1 / typing_speed_multiplier
+    typing_speed_multiplier = 1.5 ** mood_arousal  # 唤醒度为1时速度翻倍,为-1时速度减半
+    chinese_time *= 1/typing_speed_multiplier
+    english_time *= 1/typing_speed_multiplier
     # 计算中文字符数
-    chinese_chars = sum(1 for char in input_string if "\u4e00" <= char <= "\u9fff")
-
+    chinese_chars = sum(1 for char in input_string if '\u4e00' <= char <= '\u9fff')
+    
     # 如果只有一个中文字符，使用3倍时间
     if chinese_chars == 1 and len(input_string.strip()) == 1:
         return chinese_time * 3 + 0.3  # 加上回车时间
-
+        
     # 正常计算所有字符的输入时间
     total_time = 0.0
     for char in input_string:
