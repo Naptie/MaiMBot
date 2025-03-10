@@ -70,7 +70,7 @@ class WillingManager:
         x = datetime.now().timestamp() - self.group_last_reply_time.get(group_id, 0)
         rate_limit_factor = (
             math.atan(
-                (x - 50) / 3
+                (x - 40) / 3
                 if group_id in config.talk_frequency_down_groups
                 else (x - 10) / 3
             )
